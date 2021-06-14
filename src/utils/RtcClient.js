@@ -1,12 +1,8 @@
 export default class RtcClient {
   constructor() {
+    // stunprotocol.org
     const config = {
-      iceServers: [
-        {
-          // http://www.stunprotocol.org/
-          urls: "stun.stunprotocol.org",
-        },
-      ],
+      iceServers: [{ urls: "stun:stun.stunprotocol.org" }],
     };
     this.rtcPeerConnection = new RTCPeerConnection(config);
     this.localPeerName = "";
