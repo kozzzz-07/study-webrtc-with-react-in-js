@@ -26,6 +26,7 @@ const App = () => {
         setLocalPeerName={setLocalPeerName}
       />
       <InputFormRemote
+        localPeerName={localPeerName}
         remotePeerName={remotePeerName}
         setRemotePeerName={setRemotePeerName}
       />
