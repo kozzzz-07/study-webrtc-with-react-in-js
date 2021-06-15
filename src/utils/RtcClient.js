@@ -1,3 +1,5 @@
+import FirebaseSignallingClient from "./firebaseSignallingClient";
+
 export default class RtcClient {
   constructor(setRtcClient) {
     // stunprotocol.org
@@ -5,6 +7,7 @@ export default class RtcClient {
       iceServers: [{ urls: "stun:stun.stunprotocol.org" }],
     };
     this.rtcPeerConnection = new RTCPeerConnection(config);
+    this.firebaseSignallingClient = new FirebaseSignallingClient();
     this.localPeerName = "";
     this.remotePeerName = "";
     this._setRtcClient = setRtcClient;
@@ -28,6 +31,9 @@ export default class RtcClient {
   startListening(name) {
     this.localPeerName = name;
     this.setRtcClient();
-    // TODO: シグナリングサーバーをリスンする処理
+    // シグナリングサーバーをリスンする
+    this.firebaseSignallingClient.database.ref(name).on("value", (snapshot) => {
+      const data = snapshot.val();
+    });
   }
 }
