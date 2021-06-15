@@ -115,7 +115,7 @@ export default class RtcClient {
       await this.setRemoteDescription(sessionDescription);
       // answerを作成
       const answer = await this.rtcPeerConnection.createAnswer();
-      this.rtcPeerConnection.setLocalDescription(answer);
+      await this.rtcPeerConnection.setLocalDescription(answer);
       await this.sendAnswer();
     } catch (error) {
       console.error(error);
@@ -156,10 +156,21 @@ export default class RtcClient {
     return this.rtcPeerConnection.localDescription.toJSON();
   }
 
+  async addSendCandidate(candidate) {
+    try {
+      const iceCandidate = new RTCIceCandidate(candidate);
+      await this.rtcPeerConnection.addIceCandidate(iceCandidate);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   setOnicecandidateCallback() {
-    this.rtcPeerConnection.onicecandidate = ({ candidate }) => {
+    this.rtcPeerConnection.onicecandidate = async ({ candidate }) => {
       if (candidate) {
-        // TODO: remoteへcandidateを通知する
+        // remoteへcandidateを通知する
+        console.log({ candidate });
+        await this.firebaseSignallingClient.sendCandidate(candidate.toJSON());
       }
     };
   }
@@ -178,7 +189,7 @@ export default class RtcClient {
         }
         console.log({ data });
 
-        const { sender, sessionDescription, type } = data;
+        const { candidate, sender, sessionDescription, type } = data;
 
         switch (type) {
           case "offer":
@@ -188,7 +199,11 @@ export default class RtcClient {
           case "answer":
             await this.saveReceivedSessionDescription(sessionDescription);
             break;
+          case "candidate":
+            await this.addSendCandidate(candidate);
+            break;
           default:
+            this.setRtcClient();
             break;
         }
       });
