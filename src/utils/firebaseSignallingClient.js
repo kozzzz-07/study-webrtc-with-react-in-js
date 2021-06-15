@@ -36,4 +36,12 @@ export default class FirebaseSignallingClient {
       sessionDescription,
     });
   }
+
+  async sendAnswer(sessionDescription) {
+    await this.targetRef.set({
+      type: "answer",
+      sender: this.localPeerName,
+      sessionDescription,
+    });
+  }
 }

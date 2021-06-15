@@ -104,12 +104,43 @@ export default class RtcClient {
     this.setRtcClient();
   }
 
+  async answer(sender, sessionDescription) {
+    try {
+      // 誰と通信するか
+      this.remotePeerName = sender;
+      // コールバックの準備
+      this.setOnicecandidateCallback();
+      this.setOnTrack();
+      // 通信相手のsdpをrtc connection オブジェクトに設定する
+      await this.setRemoteDescription(sessionDescription);
+      // answerを作成
+      const answer = await this.rtcPeerConnection.createAnswer();
+      this.rtcPeerConnection.setLocalDescription(answer);
+      await this.sendAnswer();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   async connect(remotePeerName) {
     this.remotePeerName = remotePeerName;
     this.setOnicecandidateCallback();
     this.setOnTrack();
     await this.offer();
     this.setRtcClient();
+  }
+
+  async setRemoteDescription(sessionDescription) {
+    await this.rtcPeerConnection.setRemoteDescription(sessionDescription);
+  }
+
+  async sendAnswer() {
+    this.firebaseSignallingClient.setPeerNames(
+      this.localPeerName,
+      this.remotePeerName
+    );
+
+    await this.firebaseSignallingClient.sendAnswer(this.localDescription);
   }
 
   get localDescription() {
@@ -128,8 +159,25 @@ export default class RtcClient {
     this.localPeerName = name;
     this.setRtcClient();
     // シグナリングサーバーをリスンする
-    this.firebaseSignallingClient.database.ref(name).on("value", (snapshot) => {
-      const data = snapshot.val();
-    });
+    this.firebaseSignallingClient.database
+      .ref(name)
+      .on("value", async (snapshot) => {
+        const data = snapshot.val();
+        if (data === null) {
+          return;
+        }
+        console.log({ data });
+
+        const { sender, sessionDescription, type } = data;
+
+        switch (type) {
+          case "offer":
+            // answer
+            await this.answer(sender, sessionDescription);
+            break;
+          default:
+            break;
+        }
+      });
   }
 }
