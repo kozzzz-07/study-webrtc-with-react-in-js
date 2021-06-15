@@ -28,6 +28,35 @@ export default class RtcClient {
     }
   }
 
+  async setMediaStream() {
+    await this.getUserMedia();
+    this.addTracks();
+    this.setRtcClient();
+  }
+
+  addTracks() {
+    this.addAudioTrack();
+    this.addVideoTrack();
+  }
+
+  addAudioTrack() {
+    // ローカルピアからリモートピアへaudioのトラック情報を伝える
+    this.rtcPeerConnection.addTrack(this.audioTrack, this.mediaStream);
+  }
+
+  addVideoTrack() {
+    // ローカルピアからリモートピアへaudioのトラック情報を伝える
+    this.rtcPeerConnection.addTrack(this.videoTrack, this.mediaStream);
+  }
+
+  get audioTrack() {
+    return this.mediaStream.getAudioTracks()[0];
+  }
+
+  get videoTrack() {
+    return this.mediaStream.getVideoTracks()[0];
+  }
+
   startListening(name) {
     this.localPeerName = name;
     this.setRtcClient();
