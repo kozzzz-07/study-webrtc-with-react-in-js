@@ -58,6 +58,39 @@ export default class RtcClient {
     return this.mediaStream.getVideoTracks()[0];
   }
 
+  async offer() {
+    const sessionDescription = await this.createOffer();
+    await this.setLocalDescription(sessionDescription);
+    await this.sendOffer();
+  }
+
+  async createOffer() {
+    try {
+      return await this.rtcPeerConnection.createOffer();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async setLocalDescription(sessionDescription) {
+    try {
+      // 自分のofferをセットする
+      await this.rtcPeerConnection.setLocalDescription(sessionDescription);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async sendOffer() {
+    this.firebaseSignallingClient.setPeerNames(
+      this.localPeerName,
+      this.remotePeerName
+    );
+
+    // offerをシグナリングサーバに送る
+    await this.firebaseSignallingClient.sendOffer(this.localDescription);
+  }
+
   setOnTrack() {
     // リモートからメディアストリームを受け取る
     this.rtcPeerConnection.ontrack = (rtcTrackEvent) => {
@@ -71,10 +104,16 @@ export default class RtcClient {
     this.setRtcClient();
   }
 
-  connect(remotePeerName) {
+  async connect(remotePeerName) {
     this.remotePeerName = remotePeerName;
     this.setOnicecandidateCallback();
+    this.setOnTrack();
+    await this.offer();
     this.setRtcClient();
+  }
+
+  get localDescription() {
+    return this.rtcPeerConnection.localDescription.toJSON();
   }
 
   setOnicecandidateCallback() {

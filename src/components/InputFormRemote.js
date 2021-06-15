@@ -54,8 +54,8 @@ export default function SignIn({ rtcClient }) {
   }, [name]);
 
   const initializeRemotePeer = useCallback(
-    (e) => {
-      rtcClient.connect();
+    async (e) => {
+      await rtcClient.connect();
       e.preventDefault();
     },
     [rtcClient]
@@ -83,7 +83,7 @@ export default function SignIn({ rtcClient }) {
             }}
             onCompositionEnd={(e) => setIsComposed(false)}
             onCompositionStart={(e) => setIsComposed(true)}
-            onKeyDown={(e) => {
+            onKeyDown={async (e) => {
               // 変換中のEnterに反応しないようにする
               if (isComposed) {
                 return;
@@ -92,7 +92,7 @@ export default function SignIn({ rtcClient }) {
                 return;
               }
               if (e.key === "Enter") {
-                initializeRemotePeer(e);
+                await initializeRemotePeer(e);
               }
             }}
             required
@@ -104,8 +104,8 @@ export default function SignIn({ rtcClient }) {
             color="primary"
             disabled={disabled}
             fullWidth
-            onClick={(e) => {
-              initializeRemotePeer(e);
+            onClick={async (e) => {
+              await initializeRemotePeer(e);
             }}
             type="submit"
             variant="contained"
